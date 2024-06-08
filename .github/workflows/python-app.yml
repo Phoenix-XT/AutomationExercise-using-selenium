@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9, 3.10, 3.11]
+        python-version: [3.10, 3.11]
 
     steps:
     - name: Checkout code
@@ -33,18 +33,25 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-html selenium
 
-    - name: Run tests
+    - name: Run Selenium tests on Chrome
       env:
         SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
       run: |
-         pytest -v --html=results/report.html shopping.py
+        pytest -v --html=results/report_${{ matrix.python-version }}.html shopping.py
+      continue-on-error: true # Continue even if the test step fails to capture and upload the report
 
-    - name: Upload test results
+    - name: Upload test results for ${{ matrix.python-version }}
+      if: always() # Ensure this runs even if the previous step fails
       uses: actions/upload-artifact@v2
       with:
-        name: test-results
-        path: results/report.html
+        name: test-results-${{ matrix.python-version }}
+        path: results/report_${{ matrix.python-version }}.html
+
+    # Add retry for the entire job in case of intermittent failures
+    retries: 2

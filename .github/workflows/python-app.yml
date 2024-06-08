@@ -53,5 +53,3 @@ jobs:
         name: test-results-${{ matrix.python-version }}
         path: results/report_${{ matrix.python-version }}.html
 
-    # Add retry for the entire job in case of intermittent failures
-    retries: 2
